@@ -1,0 +1,30 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/bullet/EnemyBullet.gd" id="1_eb"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
+size = Vector2(23, 7)
+
+[node name="EnemyBullet" type="Area2D"]
+z_index = 10
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("1_eb")
+
+[node name="Shape" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_1")
+
+[node name="Glow" type="ColorRect" parent="."]
+offset_left = -20.0
+offset_top = -8.0
+offset_right = 20.0
+offset_bottom = 8.0
+mouse_filter = 2
+color = Color(1, 0.25, 0.25, 0.35)
+
+[node name="Sprite" type="ColorRect" parent="."]
+offset_left = -12.0
+offset_top = -3.0
+offset_right = 12.0
+offset_bottom = 3.0
+color = Color(1, 0.2, 0.2, 1)
