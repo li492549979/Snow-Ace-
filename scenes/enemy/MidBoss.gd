@@ -18,7 +18,7 @@ var ring_angle: float = 0.0
 
 func _ready() -> void:
 	add_to_group("midboss")
-	max_hp = 15
+	max_hp = 50
 	score_value = 2000
 	super()
 	center_y = get_viewport_rect().size.y * 0.5
@@ -45,10 +45,8 @@ func _physics_process(delta: float) -> void:
 		shoot_timer = SHOOT_COOLDOWN
 		_fire_pattern()
 
-func take_damage(amount: int = 1) -> void:
-	super(amount)
-	if not is_dead:
-		AudioManager.play_throttled("boss_hit", 0.08)
+func _play_hit_sound() -> void:
+	AudioManager.play_throttled("boss_hit", 0.08)
 
 func _fire_pattern() -> void:
 	pattern_index = (pattern_index + 1) % 2
@@ -60,11 +58,11 @@ func _fire_pattern() -> void:
 
 func _fire_aimed_spread() -> void:
 	var target_pos := Vector2(200.0, center_y)
-	var players := get_tree().get_nodes_in_group("player")
-	if players.size() > 0:
-		target_pos = players[0].global_position
+	var p: Node2D = GameState.player
+	if is_instance_valid(p):
+		target_pos = p.global_position
 	BulletFactory.fire_aimed(
-		global_position + Vector2(-50, 0), target_pos, 5, 0.6, 500.0)
+		global_position + Vector2(-100, 0), target_pos, 5, 0.6, 500.0)
 
 func _fire_ring() -> void:
 	# 慢速旋转环，保证可读性

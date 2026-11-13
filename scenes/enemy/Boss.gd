@@ -25,7 +25,7 @@ var ring_angle: float = 0.0
 
 func _ready() -> void:
 	add_to_group("boss")
-	max_hp = 30
+	max_hp = 120
 	score_value = 5000
 	super()
 	center_y = get_viewport_rect().size.y * 0.5
@@ -92,11 +92,7 @@ func _shoot_triple() -> void:
 	BulletFactory.fire_nway(_muzzle(), Vector2.LEFT, 3, 0.9, 500.0)
 
 func _shoot_aimed_3way() -> void:
-	var target_pos := Vector2(200.0, center_y)
-	var players := get_tree().get_nodes_in_group("player")
-	if players.size() > 0:
-		target_pos = players[0].global_position
-	BulletFactory.fire_aimed(_muzzle(), target_pos, 3, 0.5, 500.0)
+	BulletFactory.fire_aimed(_muzzle(), _aim_target(), 3, 0.5, 500.0)
 
 func _shoot_spread5() -> void:
 	BulletFactory.fire_nway(_muzzle(), Vector2.LEFT, 5, 1.5, 500.0)
@@ -114,11 +110,7 @@ func _emit_spiral_bullet() -> void:
 	spiral_angle += TAU / SPIRAL_COUNT
 
 func _shoot_aimed_burst() -> void:
-	var target_pos := Vector2(200.0, center_y)
-	var players := get_tree().get_nodes_in_group("player")
-	if players.size() > 0:
-		target_pos = players[0].global_position
-	BulletFactory.fire_aimed(_muzzle(), target_pos, 7, 0.72, 500.0)
+	BulletFactory.fire_aimed(_muzzle(), _aim_target(), 7, 0.72, 500.0)
 
 func _shoot_ring_burst() -> void:
 	# 慢速 16 发旋转环
@@ -126,28 +118,36 @@ func _shoot_ring_burst() -> void:
 	ring_angle += TAU / 16.0
 
 func _muzzle() -> Vector2:
-	return global_position + Vector2(-67.0, 0.0)
+	return global_position + Vector2(-201.0, 0.0)
+
+func _aim_target() -> Vector2:
+	var p: Node2D = GameState.player
+	if is_instance_valid(p):
+		return p.global_position
+	return Vector2(200.0, center_y)
 
 func take_damage(amount: int = 1) -> void:
 	if is_dead:
 		return
 	hp -= amount
 	hp_changed.emit(hp, max_hp)
+	_flash_hit()
 	if phase == 1 and hp <= max_hp * PHASE2_THRESHOLD:
 		phase = 2
 		_on_phase2_start()
 	if hp <= 0:
 		_die()
 	else:
-		AudioManager.play_throttled("boss_hit", 0.08)
+		_play_hit_sound()
+
+func _play_hit_sound() -> void:
+	AudioManager.play_throttled("boss_hit", 0.08)
 
 func _on_phase2_start() -> void:
 	AudioManager.play("phase")
-	var sprite := get_node_or_null("Sprite")
-	if sprite:
-		var tw: Tween = create_tween().set_loops(4)
-		tw.tween_property(sprite, "modulate", Color(1.0, 0.2, 0.2), 0.1)
-		tw.tween_property(sprite, "modulate", Color.WHITE, 0.1)
+	var tw: Tween = create_tween().set_loops(4)
+	tw.tween_property(sprite, "modulate", Color(1.0, 0.2, 0.2), 0.1)
+	tw.tween_property(sprite, "modulate", Color.WHITE, 0.1)
 
 func _die() -> void:
 	is_dead = true

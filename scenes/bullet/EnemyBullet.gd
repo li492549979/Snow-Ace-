@@ -8,6 +8,7 @@ const _MARGIN: float = 80.0
 func _physics_process(delta: float) -> void:
 	if rotation_speed != 0.0:
 		direction = direction.rotated(rotation_speed * delta)
+		rotation = direction.angle()  # 弯转弹贴图跟随弹道
 	position += direction * speed * delta
 	# 显式边界检查回收（VisibleOnScreenNotifier2D 对从池里瞬移过来的子弹会误判）
 	var vr := get_viewport_rect()

@@ -10,6 +10,12 @@ const BOB_SPEED: float = 4.0
 const MAGNET_RANGE: float = 220.0
 const COLLECT_SPEED: float = 650.0
 
+const TEX_WEAPON: Texture2D = preload("res://art/svg/pickup_weapon.svg")
+const TEX_HEALTH: Texture2D = preload("res://art/svg/pickup_health.svg")
+const TEX_BOMB: Texture2D = preload("res://art/svg/pickup_bomb.svg")
+const TEX_SCORE_SMALL: Texture2D = preload("res://art/svg/pickup_score_small.svg")
+const TEX_SCORE_BIG: Texture2D = preload("res://art/svg/pickup_score_big.svg")
+
 @export var pickup_type: Type = Type.SCORE_SMALL
 
 var start_y: float
@@ -17,7 +23,7 @@ var time_alive: float = 0.0
 var collected: bool = false
 var score_callback: Callable = Callable()
 
-@onready var sprite: ColorRect = $Sprite
+@onready var sprite: Sprite2D = $Sprite
 
 func _ready() -> void:
 	collision_layer = 1 << 15
@@ -27,20 +33,20 @@ func _ready() -> void:
 	start_y = position.y
 	match pickup_type:
 		Type.WEAPON:
-			sprite.color = Color(0.2, 0.8, 1.0)
+			sprite.texture = TEX_WEAPON
 		Type.HEALTH:
-			sprite.color = Color(1.0, 0.3, 0.5)
+			sprite.texture = TEX_HEALTH
 		Type.BOMB:
-			sprite.color = Color(1.0, 0.6, 0.1)
+			sprite.texture = TEX_BOMB
 		Type.SCORE_SMALL:
-			sprite.color = Color(1.0, 1.0, 0.4)
+			sprite.texture = TEX_SCORE_SMALL
 		Type.SCORE_BIG:
-			sprite.color = Color(1.0, 0.8, 0.0)
+			sprite.texture = TEX_SCORE_BIG
 
 func _physics_process(delta: float) -> void:
-	var players := get_tree().get_nodes_in_group("player")
-	if players.size() > 0 and is_instance_valid(players[0]):
-		var to_p: Vector2 = players[0].global_position - global_position
+	var p: Node2D = GameState.player
+	if is_instance_valid(p):
+		var to_p: Vector2 = p.global_position - global_position
 		if to_p.length() < MAGNET_RANGE:
 			global_position += to_p.normalized() * COLLECT_SPEED * delta
 			return

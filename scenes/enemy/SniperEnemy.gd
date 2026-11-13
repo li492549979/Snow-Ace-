@@ -48,8 +48,8 @@ func _physics_process(delta: float) -> void:
 
 func _fire_aimed() -> void:
 	var target_pos := Vector2(200.0, get_viewport_rect().size.y * 0.5)
-	var players := get_tree().get_nodes_in_group("player")
-	if players.size() > 0:
-		target_pos = players[0].global_position
+	var p: Node2D = GameState.player
+	if is_instance_valid(p):
+		target_pos = p.global_position
 	var dir := (target_pos - global_position).normalized()
 	BulletFactory.spawn_enemy_bullet($BulletSpawn.global_position, dir)

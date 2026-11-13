@@ -47,6 +47,7 @@ func spawn_enemy_bullet(pos: Vector2, dir: Vector2, rot_speed: float = 0.0, spee
 	var b := _acquire(_enemy_pool, _create_enemy_bullet)
 	b.global_position = pos
 	b.direction = dir
+	b.rotation = dir.angle()  # 贴图对齐飞行方向（环形/自机狙弹不转向会明显违和）
 	b.rotation_speed = rot_speed
 	b.speed = speed
 	_activate(b)

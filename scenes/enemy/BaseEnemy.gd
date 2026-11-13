@@ -6,19 +6,20 @@ signal hp_changed(current: int, maximum: int)
 
 const DROP_CHANCE_WEAPON: float = 0.12
 const DROP_CHANCE_HEALTH: float = 0.12
-const DROP_CHANCE_BOMB: float = 0.05
+const DROP_CHANCE_BOMB: float = 0.08
 const DROP_CHANCE_SCORE_SMALL: float = 0.25
 const DROP_CHANCE_SCORE_BIG: float = 0.03
 
 @export var max_hp: int = 3
 @export var score_value: int = 100
+@export var dies_on_contact: bool = false  # 撞到玩家时是否自毁（神风），如 RushEnemy
 
 var hp: int
 var is_dead: bool = false
 var score_callback: Callable = Callable()
 
 var hitbox: Area2D
-var _base_sprite_color: Color = Color.WHITE
+@onready var sprite: AnimatedSprite2D = $Sprite
 var _hit_tween: Tween = null
 var _last_hit_flash_msec: int = -1000
 
@@ -31,9 +32,8 @@ func _ready() -> void:
 		hitbox.add_to_group("enemy_hitbox")
 		hitbox.area_entered.connect(_on_hitbox_area_entered)
 	hp = max_hp
-	var sprite := get_node_or_null("Sprite")
-	if sprite is ColorRect:
-		_base_sprite_color = (sprite as ColorRect).color
+	sprite.play("idle")
+	sprite.animation_finished.connect(_on_sprite_animation_finished)
 
 func _on_hitbox_area_entered(area: Area2D) -> void:
 	if area.is_in_group("player_bullet"):
@@ -50,6 +50,12 @@ func take_damage(amount: int = 1) -> void:
 	_flash_hit()
 	if hp <= 0:
 		_die()
+	else:
+		_play_hit_sound()
+
+func _play_hit_sound() -> void:
+	# Boss/MidBoss 覆写为更低沉的 boss_hit；节流避免多路弹齐射刷屏
+	AudioManager.play_throttled("hit", 0.05)
 
 func _flash_hit() -> void:
 	# 节流，避免高频子弹把闪烁刷成常亮
@@ -57,15 +63,18 @@ func _flash_hit() -> void:
 	if now - _last_hit_flash_msec < 50:
 		return
 	_last_hit_flash_msec = now
-	var sprite := get_node_or_null("Sprite")
-	if not (sprite is ColorRect):
-		return
-	var cr := sprite as ColorRect
+	if sprite != null and sprite.sprite_frames != null and sprite.sprite_frames.has_animation("hit"):
+		sprite.play("hit")
 	if _hit_tween:
 		_hit_tween.kill()
-	cr.color = Color.WHITE
+	# modulate > 1 会提亮，营造“打白”的受击反馈
+	sprite.modulate = Color(2.6, 2.6, 2.6)
 	_hit_tween = create_tween()
-	_hit_tween.tween_property(cr, "color", _base_sprite_color, 0.08)
+	_hit_tween.tween_property(sprite, "modulate", Color.WHITE, 0.08)
+
+func _on_sprite_animation_finished() -> void:
+	if sprite != null and sprite.animation == "hit":
+		sprite.play("idle")
 
 func _die() -> void:
 	is_dead = true
@@ -107,4 +116,5 @@ func _spawn_pickup(pickup_type: int) -> void:
 	pickup.position = global_position
 	pickup.pickup_type = pickup_type
 	pickup.score_callback = score_callback
-	get_tree().current_scene.add_child(pickup)
+	# 延迟到物理查询刷新结束后再入树，避免在 area_entered 回调里改碰撞状态报错
+	get_tree().current_scene.call_deferred("add_child", pickup)

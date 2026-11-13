@@ -1,17 +1,27 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scenes/player/Player.gd" id="1_player"]
-
-[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_1"]
-radius = 30.0
-height = 47.0
-
-[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_hurt"]
-radius = 10.0
-height = 17.0
+[ext_resource type="PackedScene" path="res://scenes/bullet/Laser.tscn" id="2_laser"]
+[ext_resource type="Texture2D" path="res://art/png/player.png" id="3_art"]
+[ext_resource type="Texture2D" path="res://art/svg/charge_ring.svg" id="4_charge"]
+[ext_resource type="Texture2D" path="res://art/svg/muzzle_flash.svg" id="5_muzzle"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hurtbox"]
-size = Vector2(40, 30)
+size = Vector2(80, 60)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
+size = Vector2(132, 80)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_player"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_art")
+}],
+"loop": true,
+"name": &"fly",
+"speed": 10.0
+}]
 
 [node name="Player" type="CharacterBody2D"]
 script = ExtResource("1_player")
@@ -19,32 +29,31 @@ collision_layer = 0
 collision_mask = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("CapsuleShape2D_1")
-rotation = 1.5708
+shape = SubResource("RectangleShape2D_body")
 
-[node name="ChargeRing" type="ColorRect" parent="."]
+[node name="ChargeRing" type="Sprite2D" parent="."]
 visible = false
-offset_left = -25.0
-offset_top = -25.0
-offset_right = 25.0
-offset_bottom = 25.0
-mouse_filter = 2
-color = Color(1, 0.9, 0.3, 0.5)
+texture = ExtResource("4_charge")
 
-[node name="Sprite" type="ColorRect" parent="."]
-offset_left = -33.0
-offset_top = -20.0
-offset_right = 33.0
-offset_bottom = 20.0
-color = Color(0.2, 0.8, 1, 1)
+[node name="Sprite" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_player")
+animation = &"fly"
+autoplay = "fly"
 
 [node name="BulletSpawn" type="Marker2D" parent="."]
-position = Vector2(40, 0)
+position = Vector2(80, 0)
+
+[node name="MuzzleFlash" type="Sprite2D" parent="."]
+visible = false
+position = Vector2(80, 0)
+texture = ExtResource("5_muzzle")
+
+[node name="Laser" parent="." instance=ExtResource("2_laser")]
+position = Vector2(990, 0)
 
 [node name="Hurtbox" type="Area2D" parent="."]
 collision_layer = 2
-collision_mask = 36876
-script = null
+collision_mask = 32780
 
 [node name="HurtboxShape" type="CollisionShape2D" parent="Hurtbox"]
 shape = SubResource("RectangleShape2D_hurtbox")

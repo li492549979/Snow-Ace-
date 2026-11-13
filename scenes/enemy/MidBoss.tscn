@@ -1,12 +1,32 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scenes/enemy/MidBoss.gd" id="1_mb"]
+[ext_resource type="Texture2D" path="res://art/png/midboss.png" id="2_art"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
-size = Vector2(80, 60)
+size = Vector2(160, 120)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hitbox"]
-size = Vector2(73, 53)
+size = Vector2(146, 106)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_anim"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_art")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_art")
+}],
+"loop": false,
+"name": &"hit",
+"speed": 12.0
+}]
 
 [node name="MidBoss" type="CharacterBody2D"]
 script = ExtResource("1_mb")
@@ -16,15 +36,13 @@ collision_mask = 2
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_body")
 
-[node name="Sprite" type="ColorRect" parent="."]
-offset_left = -47.0
-offset_top = -33.0
-offset_right = 47.0
-offset_bottom = 33.0
-color = Color(0.6, 0.4, 0.9, 1)
+[node name="Sprite" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_anim")
+animation = &"idle"
+autoplay = "idle"
 
 [node name="BulletSpawn" type="Marker2D" parent="."]
-position = Vector2(-53, 0)
+position = Vector2(-106, 0)
 
 [node name="Hitbox" type="Area2D" parent="."]
 collision_layer = 4
