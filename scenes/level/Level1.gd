@@ -124,6 +124,7 @@ var bomb_effect_scene: PackedScene = preload("res://scenes/effect/BombEffect.tsc
 @onready var boss_bar: ProgressBar = $HUD/BossBar
 @onready var boss_name_label: Label = $HUD/BossBar/BossNameLabel
 @onready var warning_label: Label = $HUD/WarningLabel
+@onready var stage_label: Label = $HUD/StageLabel
 @onready var damage_flash: ColorRect = $HUD/DamageFlash
 @onready var result_panel: Panel = $HUD/ResultPanel
 @onready var result_title: Label = $HUD/ResultPanel/TitleLabel
@@ -150,6 +151,8 @@ func _ready() -> void:
 	boss_name_label.visible = false
 	warning_label.visible = false
 	combo_label.visible = false
+	stage_label.visible = false
+	_show_stage_title()
 	_last_known_hp = player.hp
 	player.health_changed.connect(_on_player_health_changed)
 	player.died.connect(_on_player_died)
@@ -336,8 +339,11 @@ func _on_boss_destroyed(score_value: int, at: Vector2) -> void:
 	_hide_boss_bar()
 	_add_score(score_value)
 	_spawn_score_popup(at, score_value)
-	_shake_screen(20.0, 0.5)
-	_finish_game(true)
+	_shake_screen(20.0, 0.8)
+	# 终结爆发播完再出结算；tween 绑定本节点，期间重载场景会自动作废
+	var tw := create_tween()
+	tw.tween_interval(1.0)
+	tw.tween_callback(func() -> void: _finish_game(true))
 
 func _on_boss_hp_changed(current: int, _maximum: int) -> void:
 	boss_bar.value = current
@@ -408,13 +414,25 @@ func _hide_boss_bar() -> void:
 	boss_name_label.visible = false
 
 func _show_warning() -> void:
+	# 警报两遍 + 2 秒红字闪烁，给玩家留出清屏/归位的反应时间
 	AudioManager.play("warning")
+	get_tree().create_timer(0.8).timeout.connect(func() -> void: AudioManager.play("warning"))
 	warning_label.visible = true
 	warning_label.modulate.a = 1.0
 	var tw := create_tween()
-	tw.tween_interval(0.5)
-	tw.tween_property(warning_label, "modulate:a", 0.0, 0.4)
+	tw.set_loops(4)
+	tw.tween_property(warning_label, "modulate:a", 0.0, 0.25)
+	tw.tween_property(warning_label, "modulate:a", 1.0, 0.25)
 	tw.tween_callback(func() -> void: warning_label.visible = false)
+
+func _show_stage_title() -> void:
+	stage_label.visible = true
+	stage_label.modulate.a = 0.0
+	var tw := create_tween()
+	tw.tween_property(stage_label, "modulate:a", 1.0, 0.4)
+	tw.tween_interval(1.2)
+	tw.tween_property(stage_label, "modulate:a", 0.0, 0.5)
+	tw.tween_callback(func() -> void: stage_label.visible = false)
 
 func is_pause_allowed() -> bool:
 	return not game_finished

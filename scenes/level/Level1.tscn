@@ -159,6 +159,17 @@ theme_override_font_sizes/font_size = 56
 theme_override_colors/font_color = Color(1, 0.25, 0.25, 1)
 text = "WARNING"
 
+[node name="StageLabel" type="Label" parent="HUD"]
+visible = false
+offset_left = 660.0
+offset_top = 380.0
+offset_right = 1260.0
+offset_bottom = 480.0
+theme_override_font_sizes/font_size = 56
+text = "STAGE 1"
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="BossBar" type="ProgressBar" parent="HUD"]
 visible = false
 offset_left = 660.0

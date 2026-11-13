@@ -6,6 +6,7 @@ const IDLE_X: float = 1500.0
 const MOVE_RANGE_Y: float = 300.0
 const MOVE_SPEED_Y: float = 117.0
 const PHASE2_THRESHOLD: float = 0.5
+const BULLET_SCORE_VALUE: int = 100
 const SHOOT_CD_P1: float = 1.2
 const SHOOT_CD_P2: float = 0.7
 const SPIRAL_INTERVAL: float = 0.08
@@ -144,13 +145,25 @@ func _play_hit_sound() -> void:
 	AudioManager.play_throttled("boss_hit", 0.08)
 
 func _on_phase2_start() -> void:
+	if is_dead:  # 击杀瞬间恰好跨阈值时，避免阶段闪红与死亡打白 tween 冲突
+		return
 	AudioManager.play("phase")
 	var tw: Tween = create_tween().set_loops(4)
 	tw.tween_property(sprite, "modulate", Color(1.0, 0.2, 0.2), 0.1)
 	tw.tween_property(sprite, "modulate", Color.WHITE, 0.1)
 
 func _die() -> void:
+	if is_dead:
+		return
 	is_dead = true
+	_clear_bullets_to_score(BULLET_SCORE_VALUE)
+	# 演出期间持续打白闪烁；移动/开火已由 is_dead 停掉
+	var tw: Tween = create_tween().set_loops(6)
+	tw.tween_property(sprite, "modulate", Color(3.0, 3.0, 3.0), 0.12)
+	tw.tween_property(sprite, "modulate", Color.WHITE, 0.12)
+	_chain_explode(8, 0.15, 90.0, _finalize_death)
+
+func _finalize_death() -> void:
 	destroyed.emit(score_value, global_position)
 	AudioManager.play("explosion")
 	_spawn_pickup(0)

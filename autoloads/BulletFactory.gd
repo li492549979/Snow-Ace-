@@ -15,11 +15,13 @@ var player_bullet_scene: PackedScene = preload("res://scenes/bullet/PlayerBullet
 var _enemy_pool: Array[Area2D] = []
 var _player_pool: Array[Area2D] = []
 
-# 特效池（爆炸/飘字）—— 轻量池化
+# 特效池（爆炸/飘字/命中火花）—— 轻量池化
 var explosion_scene: PackedScene = preload("res://scenes/effect/ExplosionEffect.tscn")
 var score_popup_scene: PackedScene = preload("res://scenes/effect/ScorePopup.tscn")
+var hitspark_scene: PackedScene = preload("res://scenes/effect/HitSpark.tscn")
 var _explosion_pool: Array[Node2D] = []
 var _score_popup_pool: Array[Node2D] = []
+var _hitspark_pool: Array[Node2D] = []
 
 func _ready() -> void:
 	for i in POOL_ENEMY_INIT:
@@ -192,6 +194,26 @@ func _create_score_popup() -> Node2D:
 	if p.has_method("deactivate"):
 		p.deactivate()
 	return p
+
+func spawn_hit_spark(pos: Vector2) -> void:
+	var s: Node2D = _acquire_node(_hitspark_pool, _create_hitspark)
+	if s.has_method("activate"):
+		s.activate(pos)
+
+func release_hit_spark(s: Node2D) -> void:
+	if not is_instance_valid(s):
+		return
+	if s.has_method("deactivate"):
+		s.deactivate()
+	if not _hitspark_pool.has(s):
+		_hitspark_pool.append(s)
+
+func _create_hitspark() -> Node2D:
+	var s := hitspark_scene.instantiate()
+	add_child(s)
+	if s.has_method("deactivate"):
+		s.deactivate()
+	return s
 
 func _acquire_node(pool: Array, factory: Callable) -> Node2D:
 	if pool.is_empty():

@@ -70,7 +70,16 @@ func _fire_ring() -> void:
 	ring_angle += TAU / 10.0
 
 func _die() -> void:
+	if is_dead:
+		return
 	is_dead = true
+	_clear_bullets_to_score(100)
+	var tw: Tween = create_tween().set_loops(5)
+	tw.tween_property(sprite, "modulate", Color(3.0, 3.0, 3.0), 0.1)
+	tw.tween_property(sprite, "modulate", Color.WHITE, 0.1)
+	_chain_explode(5, 0.12, 60.0, _finalize_death)
+
+func _finalize_death() -> void:
 	destroyed.emit(score_value, global_position)
 	AudioManager.play("explosion")
 	_spawn_pickup(0)

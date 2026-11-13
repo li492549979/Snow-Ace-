@@ -39,6 +39,7 @@ func _on_hitbox_area_entered(area: Area2D) -> void:
 	if area.is_in_group("player_bullet"):
 		var d = area.get("damage")
 		var dmg: int = d if d is int else 1
+		BulletFactory.spawn_hit_spark(area.global_position)
 		BulletFactory.release_player_bullet(area)
 		take_damage(dmg)
 
@@ -86,6 +87,33 @@ func _die() -> void:
 
 func _spawn_explosion() -> void:
 	BulletFactory.spawn_explosion(global_position)
+
+func _chain_explode(count: int, interval: float, radius: float, on_done: Callable) -> void:
+	## 死亡演出：间隔链式爆点，全部播完后回调（发分数/掉落/自毁）。
+	## 供 Boss/MidBoss 覆写 _die() 使用；普通小兵仍走即炸即毁。
+	for i in count:
+		var delay: float = interval * i
+		get_tree().create_timer(delay).timeout.connect(func() -> void:
+			if not is_instance_valid(self):
+				return
+			BulletFactory.spawn_explosion(global_position + Vector2(randf_range(-radius, radius), randf_range(-radius, radius)))
+			AudioManager.play_throttled("explosion", 0.12))
+	get_tree().create_timer(interval * count + 0.3).timeout.connect(on_done)
+
+func _clear_bullets_to_score(per_bullet: int) -> void:
+	## 战国之刃式演出：Boss 死亡瞬间全屏敌弹转化为分数。
+	var bullets := get_tree().get_nodes_in_group("enemy_bullet")
+	var live: int = 0
+	for b in bullets:
+		if b.visible:
+			live += 1
+		BulletFactory.release_enemy_bullet(b)
+	if live > 0 and score_callback.is_valid():
+		score_callback.call(live * per_bullet)
+		BulletFactory.spawn_score_popup(
+			global_position + Vector2(0.0, -160.0),
+			"BONUS %d x %d" % [live, per_bullet],
+			Color(1.0, 0.85, 0.3))
 
 func _try_drop_pickup() -> void:
 	var roll := randf()
